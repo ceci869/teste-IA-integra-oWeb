@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="winter">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal da Inteligência Artificial</title>
+    <!-- Tailwind & DaisyUI -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-base-200 min-h-screen flex flex-col font-sans">
+
+    <!-- Navbar -->
+    <div class="navbar bg-primary text-primary-content shadow-lg px-8">
+        <div class="flex-1">
+            <a class="btn btn-ghost text-xl font-bold">IA InfoWeb</a>
+        </div>
+        <div class="flex-none hidden md:flex">
+            <ul class="menu menu-horizontal px-1 font-semibold">
+                <li><a>Sobre IA</a></li>
+                <li><a>Aplicações</a></li>
+                <li><a>Fale com o Bot</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-7xl flex flex-col md:flex-row gap-8">
+        
+        <!-- Info Section (Esquerda) -->
+        <section class="md:w-[70vw] flex flex-col gap-6">
+            <div class="card bg-base-100 shadow-xl border-t-4 border-primary">
+                <div class="card-body">
+                    <h2 class="card-title text-3xl text-primary mb-2">O futuro é agora</h2>
+                    <p class="text-base-content text-justify">
+                        A Inteligência Artificial deixou de ser ficção científica e se tornou uma ferramenta essencial. 
+                        Desde automatizar tarefas rotineiras até gerar análises de dados complexas, modelos baseados em LLMs 
+                        (Large Language Models) estão revolucionando a forma como interagimos com a tecnologia.
+                    </p>
+                    <p class="text-base-content text-justify mt-2">
+                        Use o chatbot ao lado para fazer qualquer pergunta sobre IA, programação ou como a tecnologia 
+                        pode ajudar no seu dia a dia!
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chat Section (Direita) -->
+        <section class="md:w-[100vw]">
+            <div class="card bg-base-100 shadow-xl h-[500px] flex flex-col">
+                <div class="card-body p-4 flex flex-col h-full">
+                    <h3 class="font-bold text-lg text-primary border-b pb-2 mb-4">Assistente Virtual Groq</h3>
+                    
+                    <!-- Área de Mensagens -->
+                    <div id="chat-box" class="flex-grow overflow-y-auto flex flex-col gap-2 px-2 pb-4">
+                        <!-- Mensagem inicial do Bot -->
+                        <div class="chat chat-start">
+                            <div class="chat-bubble bg-gray-100 text-gray-800">
+                                Olá! Sou o assistente de IA. Como posso te ajudar hoje?
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Input Area -->
+                    <form id="chat-form" class="mt-4 flex gap-2">
+                        <input type="text" id="user-input" placeholder="Digite sua mensagem..." 
+                               class="input input-bordered input-primary w-full" required />
+                        <button type="submit" id="send-btn" class="btn btn-primary text-white">
+                            Enviar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer footer-center p-4 bg-base-300 text-base-content mt-auto">
+        <aside>
+            <p>Copyright © 2026 - Desenvolvido com Flask & DaisyUI</p>
+        </aside>
+    </footer>
+
+    <!-- Script de Integração Frontend/Backend -->
+    <script>
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        const chatBox = document.getElementById('chat-box');
+        const sendBtn = document.getElementById('send-btn');
+
+        function appendMessage(text, sender) {
+            const chatDiv = document.createElement('div');
+            chatDiv.className = `chat ${sender === 'user' ? 'chat-end' : 'chat-start'}`;
+            
+            const bubbleDiv = document.createElement('div');
+            // Usuário fica azul (primary), Bot fica cinza claro
+            bubbleDiv.className = `chat-bubble shadow-sm ${sender === 'user' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-800'}`;
+            bubbleDiv.textContent = text;
+            
+            chatDiv.appendChild(bubbleDiv);
+            chatBox.appendChild(chatDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // Adiciona msg do usuário na tela
+            appendMessage(message, 'user');
+            userInput.value = '';
+            
+            // Estado de carregamento
+            sendBtn.disabled = true;
+            sendBtn.textContent = '...';
+
+            try {
+                // Envia para o backend Flask
+                const response = await fetch('/chatbot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                
+                const data = await response.json();
+                
+                if (data.reply) {
+                    appendMessage(data.reply, 'bot');
+                } else {
+                    appendMessage("Erro: Não foi possível obter resposta.", 'bot');
+                }
+            } catch (err) {
+                appendMessage("Erro na conexão com o servidor.", 'bot');
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Enviar';
+            }
+        });
+    </script>
+</body>
+</html>
